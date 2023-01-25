@@ -1,7 +1,7 @@
 # Hide-Furni-v4.0 (Lande original creator)
 - Disappear furni from floor or wall, you can rollback only floor furni.
 - You must move furni after enabling extension for hide
-- some furnis cannot be rollbacked for example LTD furni, consumable furni, and somo specific furni, you will se msg
+- some furnis cannot be rollbacked e.g LTD furni, consumable furni, and somo specific furni (they will cause the extension to crash)
 
 # Install
 python -m pip install g-python
