@@ -1,9 +1,10 @@
+import re
 import sys
 from g_python.gextension import Extension
 from g_python.hmessage import Direction
 
 extension_info = {
-    "title": "Hide_Furni_v3.0",
+    "title": "Hide_Furni_v4.0",
     "description": "Hide a furni",
     "version": "4.0",
     "author": "felipeXXI"
@@ -51,7 +52,6 @@ def commands(message):
         try:
             rollback_range = int(text[10:])
         except ValueError:
-            # return ext.send_to_client('{l}{h:'+str(h_info)+'}{i:0}{s:"[ Hide furni => Only number available ]"}{i:0}{i:1}{i:0}{i:0}')
             return ext.send_to_client(
                 '{in:Chat}{i:123456789}{s:"[ Hide furni => Only number available ]"}{i:0}{i:31}{i:0}{i:0}')
         for i in range(rollback_range):
@@ -67,7 +67,6 @@ def commands(message):
 
 def rollback():
     global rollback_stock, rollback_count
-    # for i in range(0, len(rollback_stock)):
     if rollback_stock[0][0] == "floor":
         (item, Id, form, loc1, loc2, loc3, siz1, siz2, fix1, fix2, fix3, fix4, fix5) = rollback_stock[0]
         ext.send_to_client('{in:ObjectAdd}{i:' + str(Id) + '}{i:' + str(form) + "}{i:" + str(loc1) + '}{i:' + str(loc2)
@@ -91,18 +90,6 @@ def rollback():
         rollback_count += 1
         del rollback_stock[0]
     # print(rollback_stock)
-
-
-'''def use_objects(packet):
-    global furni_id, hide_furni, mute_off
-
-    [furni_id, x] = packet.packet.read("ii")
-
-    if hide_furni is True:
-        ext.send_to_client('{in:ItemRemove}{s:"' + str(furni_id) + '"}{i:0}')
-        if mute_off:
-            ext.send_to_client(
-                '{in:Chat}{i:123456789}{s:"[Furni Id ' + str(furni_id) + ' removed]"}{i:0}{i:30}{i:0}{i:0}')'''
 
 
 def move_objects_floor(packet):
@@ -130,12 +117,15 @@ def move_objects_wall(packet):
 
 
 def get_move_objects_info(packet):
-    global furni_id, hide_furni
+    global furni_id, hide_furni, mute_off
     if hide_furni is True:
-        (furni_id, form, loc1, loc2, loc3, siz1, siz2, fix1, fix2, fix3, fix4, fix5, fix6) = packet.packet.read(
-            "iiiiissiisiii")
-        rollback_stock.insert(0, ["floor", furni_id, form, loc1, loc2, loc3, siz1, siz2, fix1, fix2, fix3, fix4, fix5])
-        # print(rollback_stock)
+        #print(packet.packet.read("iiiiissiisiii"))
+        (furni_id, form, loc1, loc2, loc3, siz1, siz2, fix1, fix2, fix3, fix4, fix5, fix6) = packet.packet.read("iiiiissiisiii")
+        if fix4 == -1:      # Do no stock in rollback furni that causes the extension to crash: LTD furni, staff only furni, etc.
+            rollback_stock.insert(0, ["floor", furni_id, form, loc1, loc2, loc3, siz1, siz2, fix1, fix2, fix3, fix4, fix5])
+        elif fix4 != -1 and mute_off:
+            ext.send_to_client('{in:Chat}{i:123456789}{s:"[ Hide furni => This furni cannot be rollback ]"}{i:0}{i:31}{i:0}{i:0}')
+    # print(rollback_stock)
 
 
 def get_wall_objects_info(packet):
@@ -156,8 +146,6 @@ def block_error_message(message):
     if hide_furni is True:
         message.is_blocked = True  # hides annoying message that you cannot move furni from rooms
 
-
-# ext.intercept(Direction.TO_SERVER, use_objects, "UseWallItem")
 ext.intercept(Direction.TO_SERVER, move_objects_floor, "MoveObject")
 ext.intercept(Direction.TO_SERVER, move_objects_wall, "MoveWallItem")
 ext.intercept(Direction.TO_CLIENT, get_move_objects_info, "ObjectUpdate")
